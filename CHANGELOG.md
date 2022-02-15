@@ -3,6 +3,7 @@
 Changes to Calva.
 
 ## [Unreleased]
+- [Apply basic typescript eslint rules](https://github.com/BetterThanTomorrow/calva/issues/1536)
 
 ## [2.0.243] - 2022-02-13
 - [Use vanilla cljfmt for regular formatting](https://github.com/BetterThanTomorrow/calva/pull/1179)
