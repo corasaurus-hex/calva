@@ -111,7 +111,7 @@ export function startOFileToCursor(
 
 function fromFn(
     editor: vscode.TextEditor,
-    cursorDocFn: Function
+    cursorDocFn: (doc: EditableDocument, offset?: number) => [number, number]
 ): SelectionAndText {
     if (editor) {
         const document = editor.document;
