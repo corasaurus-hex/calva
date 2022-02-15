@@ -47,7 +47,7 @@ async function readEdnWorkspaceConfig(uri?: vscode.Uri) {
  * @param {string} data a string representation of a clojure map
  * @returns an error of one was thrown
  */
-async function addEdnConfig(data: string) {
+function addEdnConfig(data: string) {
     try {
         const parsed = parseEdn(data);
         const old = state.getProjectConfig();
