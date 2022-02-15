@@ -15,10 +15,9 @@ function configuration(
     cljfmtString: string
 ) {
     return {
-        'format-as-you-type': workspaceConfig.get('formatAsYouType') as boolean,
-        'keep-comment-forms-trail-paren-on-own-line?': workspaceConfig.get(
-            'keepCommentTrailParenOnOwnLine'
-        ) as boolean,
+        'format-as-you-type': workspaceConfig.get<boolean>('formatAsYouType'),
+        'keep-comment-forms-trail-paren-on-own-line?':
+            workspaceConfig.get<boolean>('keepCommentTrailParenOnOwnLine'),
         'cljfmt-string': cljfmtString,
         'cljfmt-options': cljfmtOptions(cljfmtString),
     };
