@@ -2,9 +2,9 @@
     "compilerOptions": {
         "incremental": true,
         "tsBuildInfoFile": "tsconfig.tsbuildinfo",
-        "strict": false, /* Enable all strict type-checking options. */
+        "strict": false /* Enable all strict type-checking options. */,
         // "noImplicitAny": true,                 /* Raise error on expressions and declarations with an implied 'any' type. */
-        // "strictNullChecks": true,              /* Enable strict null checks. */
+        "strictNullChecks": true /* Enable strict null checks. */,
         // "strictFunctionTypes": true,           /* Enable strict checking of function types. */
         // "strictBindCallApply": true,           /* Enable strict 'bind', 'call', and 'apply' methods on functions. */
         // "strictPropertyInitialization": true,  /* Enable strict checking of property initialization in classes. */
@@ -18,18 +18,9 @@
         "module": "commonjs",
         "target": "es6",
         "outDir": "out",
-        "lib": [
-            "es7",
-            "dom",
-            "ESNext.String"
-        ],
+        "lib": ["es7", "dom", "ESNext.String"],
         "sourceMap": true,
-        "rootDir": "src",
+        "rootDir": "src"
     },
-    "exclude": [
-        "node_modules",
-        "src/webview",
-        "src/webview.ts",
-        ".vscode-test"
-    ]
+    "exclude": ["node_modules", "src/webview", "src/webview.ts", ".vscode-test"]
 }
