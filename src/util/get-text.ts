@@ -6,12 +6,13 @@ import * as cursorTextGetter from './cursor-get-text';
 import { EditableDocument } from '../cursor-doc/model';
 
 export type SelectionAndText = [vscode.Selection, string];
+export type UndefinedSelection = [undefined, ''];
 
 function _currentFormText(
     doc: vscode.TextDocument,
     topLevel: boolean,
     pos: vscode.Position
-): SelectionAndText {
+): SelectionAndText | UndefinedSelection {
     if (doc) {
         const codeSelection = select.getFormSelection(doc, pos, topLevel);
         return [codeSelection, doc.getText(codeSelection)];
@@ -22,14 +23,14 @@ function _currentFormText(
 export function currentTopLevelFormText(
     doc: vscode.TextDocument,
     pos: vscode.Position
-): SelectionAndText {
+): SelectionAndText | UndefinedSelection {
     return _currentFormText(doc, true, pos);
 }
 
 export function currentFormText(
     doc: vscode.TextDocument,
     pos: vscode.Position
-): SelectionAndText {
+): SelectionAndText | UndefinedSelection {
     return _currentFormText(doc, false, pos);
 }
 
@@ -65,7 +66,7 @@ function selectionAndText(
     textGetter: (
         doc: EditableDocument | undefined
     ) => cursorTextGetter.RangeAndText
-): SelectionAndText {
+): SelectionAndText | UndefinedSelection {
     if (doc) {
         const mirrorDoc = docMirror.getDocument(doc);
         const [range, text] = textGetter(mirrorDoc);
@@ -78,32 +79,34 @@ function selectionAndText(
 
 export function currentEnclosingFormToCursor(
     doc: vscode.TextDocument
-): SelectionAndText {
+): SelectionAndText | UndefinedSelection {
     return selectionAndText(doc, cursorTextGetter.currentEnclosingFormToCursor);
 }
 
 export function currentTopLevelFunction(
     doc: vscode.TextDocument
-): SelectionAndText {
+): SelectionAndText | UndefinedSelection {
     return selectionAndText(doc, cursorTextGetter.currentTopLevelFunction);
 }
 
 export function currentTopLevelFormToCursor(
     doc: vscode.TextDocument
-): SelectionAndText {
+): SelectionAndText | UndefinedSelection {
     return selectionAndText(doc, cursorTextGetter.currentTopLevelFormToCursor);
 }
 
-export function startOFileToCursor(doc: vscode.TextDocument): SelectionAndText {
+export function startOFileToCursor(
+    doc: vscode.TextDocument
+): SelectionAndText | UndefinedSelection {
     return selectionAndText(doc, cursorTextGetter.startOfFileToCursor);
 }
 
 function fromFn(
     doc: vscode.TextDocument,
     cursorDocFn: (doc: EditableDocument, offset?: number) => [number, number]
-): SelectionAndText {
+): SelectionAndText | UndefinedSelection {
     if (doc) {
-        const cursorDoc = docMirror.getDocument(doc);
+        const cursorDoc = docMirror.mustGetDocument(doc);
         const range = cursorDocFn(cursorDoc);
         const selection = select.selectionFromOffsetRange(doc, range);
         const text = doc.getText(selection);
@@ -112,11 +115,15 @@ function fromFn(
     return [undefined, ''];
 }
 
-export function toStartOfList(doc: vscode.TextDocument): SelectionAndText {
+export function toStartOfList(
+    doc: vscode.TextDocument
+): SelectionAndText | UndefinedSelection {
     return fromFn(doc, paredit.rangeToBackwardList);
 }
 
-export function toEndOfList(doc: vscode.TextDocument): SelectionAndText {
+export function toEndOfList(
+    doc: vscode.TextDocument
+): SelectionAndText | UndefinedSelection {
     return fromFn(doc, paredit.rangeToForwardList);
 }
 
