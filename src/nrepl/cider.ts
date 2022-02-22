@@ -214,6 +214,14 @@ export function shortMessage(result: TestResult): string {
     }
 }
 
-export function hasLineNumber(result: TestResult): boolean {
+export function hasLineNumber(
+    result: TestResult
+): result is TestResult & { line: number } {
     return typeof result.line === 'number';
+}
+
+export function hasFile(
+    result: TestResult
+): result is TestResult & { file: string } {
+    return typeof result.file === 'string';
 }

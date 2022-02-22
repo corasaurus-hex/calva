@@ -9,6 +9,7 @@ import * as lsp from './lsp/types';
 import * as namespace from './namespace';
 import { getSession, updateReplSessionType } from './nrepl/repl-session';
 import * as getText from './util/get-text';
+import { isUndefined } from 'lodash';
 
 const diagnosticCollection =
     vscode.languages.createDiagnosticCollection('calva');
@@ -78,7 +79,7 @@ export function assertionName(result: cider.TestResult): string {
 function existingUriForNameSpace(
     controller: vscode.TestController,
     nsName: string
-): vscode.Uri | null {
+): vscode.Uri | undefined {
     return controller.items.get(nsName)?.uri;
 }
 
@@ -91,10 +92,10 @@ async function onTestResult(
     assertions: cider.TestResult[]
 ) {
     let uri = existingUriForNameSpace(controller, nsName);
-    if (!uri) {
+    if (isUndefined(uri)) {
         uri = await namespace.getUriForNamespace(session, nsName);
     }
-    if (!uri) {
+    if (isUndefined(uri)) {
         console.warn(
             'Test Runner: Unable to find file corresponding to namespace: ' +
                 nsName
@@ -201,7 +202,7 @@ async function onTestResults(
 }
 
 function useTestExplorer(): boolean {
-    return vscode.workspace.getConfiguration('calva').get('useTestExplorer');
+    return !!vscode.workspace.getConfiguration('calva').get('useTestExplorer');
 }
 
 function reportTests(
@@ -216,6 +217,20 @@ function reportTests(
 
     const recordDiagnostic = (result: cider.TestResult) => {
         const msg = cider.diagnosticMessage(result);
+
+        if (!cider.hasLineNumber(result) || !cider.hasFile(result)) {
+            /*
+             Not having a line number or a filename results in nonsensical results,
+             so throw an error here so we know it's happening so we can fix it.
+             In all likelihood we should add type discrimination based on result type
+             so that we can guarantee values will be present in different cases.
+            */
+            console.error('Expected a line and a file in cider results!', {
+                result,
+            });
+            throw new Error('Expected a line and a file in cider results!');
+        }
+
         const err = new vscode.Diagnostic(
             new vscode.Range(result.line - 1, 0, result.line - 1, 1000),
             msg,
@@ -406,7 +421,7 @@ function runNamespaceTestsCommand(controller: vscode.TestController) {
     }
     runNamespaceTests(
         controller,
-        vscode.window.activeTextEditor.document
+        util.mustGetActiveTextEditor().document
     ).catch((msg) => {
         void vscode.window.showWarningMessage(msg);
     });
@@ -474,7 +489,7 @@ function initialize(controller: vscode.TestController): void {
             // The next steps here would be to turn request.exclude and requst.include
             // into a Cider var-query that can be passed to test-var query directly.
             const namespaces = util.distinct(runItems.map((ri) => ri[0]));
-            const doc = vscode.window.activeTextEditor.document;
+            const doc = util.mustGetActiveTextEditor().document;
             runNamespaceTestsImpl(controller, doc, namespaces).catch((msg) => {
                 void vscode.window.showWarningMessage(msg);
             });

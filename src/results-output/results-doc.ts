@@ -102,12 +102,12 @@ export function setSession(session: NReplSession, newNs: string): void {
     }
 }
 
-export function isResultsDoc(doc: vscode.TextDocument): boolean {
+export function isResultsDoc(doc?: vscode.TextDocument): boolean | undefined {
     return doc && path.basename(doc.fileName) === RESULTS_DOC_NAME;
 }
 
 function getViewColumn(): vscode.ViewColumn {
-    const column: vscode.ViewColumn = state.extensionContext.workspaceState.get(
+    const column = state.extensionContext.workspaceState.get<vscode.ViewColumn>(
         `outputWindowViewColumn`
     );
     return column ? column : vscode.ViewColumn.Two;
