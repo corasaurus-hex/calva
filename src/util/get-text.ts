@@ -65,7 +65,7 @@ function selectionAndText(
     doc: vscode.TextDocument,
     textGetter: (
         doc: EditableDocument | undefined
-    ) => cursorTextGetter.RangeAndText
+    ) => cursorTextGetter.RangeAndText | cursorTextGetter.UndefinedRange
 ): SelectionAndText | UndefinedSelection {
     if (doc) {
         const mirrorDoc = docMirror.getDocument(doc);
