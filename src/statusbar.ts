@@ -36,13 +36,12 @@ const color = {
 function colorValue(
     section: string,
     currentConf: vscode.WorkspaceConfiguration
-): string {
+): string | undefined {
     const { defaultValue, globalValue, workspaceFolderValue, workspaceValue } =
-        currentConf.inspect(section);
-    return (workspaceFolderValue ||
-        workspaceValue ||
-        globalValue ||
-        defaultValue) as string;
+        currentConf.inspect<string>(section) || {};
+    return (
+        workspaceFolderValue || workspaceValue || globalValue || defaultValue
+    );
 }
 
 function update(context = state.extensionContext) {
@@ -65,7 +64,7 @@ function update(context = state.extensionContext) {
 
     //let disconnectedColor = "rgb(192,192,192)";
 
-    const pprint = config.getConfig().prettyPrintingOptions.enabled;
+    const pprint = config.mustGetPrettyPrinterOptions().enabled;
     prettyPrintToggle.text = 'pprint';
     prettyPrintToggle.color = pprint ? undefined : color.inactive;
     prettyPrintToggle.tooltip = `Turn pretty printing ${pprint ? 'off' : 'on'}`;

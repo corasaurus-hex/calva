@@ -5,6 +5,7 @@ import { PrettyPrintingOptions } from './printer';
 import { parseEdn } from '../out/cljs-lib/cljs-lib';
 import * as state from './state';
 import _ = require('lodash');
+import { isUndefined } from 'lodash';
 
 const REPL_FILE_EXT = 'calva-repl';
 const KEYBINDINGS_ENABLED_CONFIG_KEY = 'calva.keybindingsEnabled';
@@ -181,6 +182,17 @@ function getConfig() {
     };
 }
 
+function mustGetPrettyPrinterOptions() {
+    const options = getConfig().prettyPrintingOptions;
+
+    if (isUndefined(options)) {
+        console.error('Expected pretty printer options!');
+        throw new Error('Expected pretty printer options!');
+    }
+
+    return options;
+}
+
 export {
     readEdnWorkspaceConfig,
     addEdnConfig,
@@ -190,4 +202,5 @@ export {
     documentSelector,
     ReplSessionType,
     getConfig,
+    mustGetPrettyPrinterOptions,
 };
