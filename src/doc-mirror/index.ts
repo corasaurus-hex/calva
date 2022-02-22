@@ -11,6 +11,7 @@ import {
     LineInputModel,
     ModelEditSelection,
 } from '../cursor-doc/model';
+import { isUndefined } from 'lodash';
 
 const documents = new Map<vscode.TextDocument, MirroredDocument>();
 
@@ -28,7 +29,7 @@ export class DocumentModel implements EditableModel {
         modelEdits: ModelEdit[],
         options: ModelEditOptions
     ): Thenable<boolean> {
-        const editor = vscode.window.activeTextEditor,
+        const editor = utilities.mustGetActiveTextEditor(),
             undoStopBefore = !!options.undoStopBefore;
         return editor
             .edit(
@@ -84,7 +85,7 @@ export class DocumentModel implements EditableModel {
         oldSelection?: [number, number],
         newSelection?: [number, number]
     ) {
-        const editor = vscode.window.activeTextEditor,
+        const editor = utilities.mustGetActiveTextEditor(),
             document = editor.document;
         builder.insert(document.positionAt(offset), text);
     }
@@ -97,7 +98,7 @@ export class DocumentModel implements EditableModel {
         oldSelection?: [number, number],
         newSelection?: [number, number]
     ) {
-        const editor = vscode.window.activeTextEditor,
+        const editor = utilities.mustGetActiveTextEditor(),
             document = editor.document,
             range = new vscode.Range(
                 document.positionAt(start),
@@ -113,7 +114,7 @@ export class DocumentModel implements EditableModel {
         oldSelection?: [number, number],
         newSelection?: [number, number]
     ) {
-        const editor = vscode.window.activeTextEditor,
+        const editor = utilities.mustGetActiveTextEditor(),
             document = editor.document,
             range = new vscode.Range(
                 document.positionAt(offset),
@@ -134,8 +135,15 @@ export class DocumentModel implements EditableModel {
         return this.lineInputModel.getOffsetForLine(line);
     }
 
-    public getTokenCursor(offset: number, previous: boolean = false) {
-        return this.lineInputModel.getTokenCursor(offset, previous);
+    public getTokenCursor(
+        offset: number,
+        previous: boolean = false
+    ): LispTokenCursor {
+        const cursor = this.lineInputModel.getTokenCursor(offset, previous);
+        if (isUndefined(cursor)) {
+            throw new Error('Expected to find cursor!');
+        }
+        return cursor;
     }
 }
 export class MirroredDocument implements EditableDocument {
@@ -143,13 +151,13 @@ export class MirroredDocument implements EditableDocument {
 
     get selectionLeft(): number {
         return this.document.offsetAt(
-            vscode.window.activeTextEditor.selection.anchor
+            utilities.mustGetActiveTextEditor().selection.anchor
         );
     }
 
     get selectionRight(): number {
         return this.document.offsetAt(
-            vscode.window.activeTextEditor.selection.active
+            utilities.mustGetActiveTextEditor().selection.active
         );
     }
 
@@ -158,14 +166,14 @@ export class MirroredDocument implements EditableDocument {
     selectionStack: ModelEditSelection[] = [];
 
     public getTokenCursor(
-        offset: number = this.selectionRight,
-        previous: boolean = false
+        offset: number | undefined = this.selectionRight,
+        previous: boolean | undefined = false
     ): LispTokenCursor {
         return this.model.getTokenCursor(offset, previous);
     }
 
     public insertString(text: string) {
-        const editor = vscode.window.activeTextEditor,
+        const editor = utilities.mustGetActiveTextEditor(),
             selection = editor.selection,
             wsEdit = new vscode.WorkspaceEdit(),
             edit = vscode.TextEdit.insert(
@@ -179,7 +187,7 @@ export class MirroredDocument implements EditableDocument {
     }
 
     set selection(selection: ModelEditSelection) {
-        const editor = vscode.window.activeTextEditor,
+        const editor = utilities.mustGetActiveTextEditor(),
             document = editor.document,
             anchor = document.positionAt(selection.anchor),
             active = document.positionAt(selection.active);
@@ -192,16 +200,16 @@ export class MirroredDocument implements EditableDocument {
     }
 
     public getSelectionText() {
-        const editor = vscode.window.activeTextEditor,
+        const editor = utilities.mustGetActiveTextEditor(),
             selection = editor.selection;
         return this.document.getText(selection);
     }
 
-    public delete(): Thenable<boolean> {
+    public delete(): Thenable<boolean | undefined> {
         return vscode.commands.executeCommand('deleteRight');
     }
 
-    public backspace(): Thenable<boolean> {
+    public backspace(): Thenable<boolean | undefined> {
         return vscode.commands.executeCommand('deleteLeft');
     }
 }
@@ -209,7 +217,7 @@ export class MirroredDocument implements EditableDocument {
 let registered = false;
 
 function processChanges(event: vscode.TextDocumentChangeEvent) {
-    const model = documents.get(event.document).model;
+    const model = mustGetDocument(event.document).model;
     for (const change of event.contentChanges) {
         // vscode may have a \r\n marker, so it's line offsets are all wrong.
         const myStartOffset =
@@ -241,15 +249,25 @@ export function getDocument(doc: vscode.TextDocument) {
     return documents.get(doc);
 }
 
+export function mustGetDocument(doc: vscode.TextDocument) {
+    const mirrorDoc = documents.get(doc);
+
+    if (isUndefined(mirrorDoc)) {
+        throw new Error('Missing mirror document!');
+    }
+
+    return mirrorDoc;
+}
+
 export function getDocumentOffset(
     doc: vscode.TextDocument,
     position: vscode.Position
 ) {
-    const model = getDocument(doc).model;
+    const model = mustGetDocument(doc).model;
     return model.getOffsetForLine(position.line) + position.character;
 }
 
-function addDocument(doc: vscode.TextDocument): boolean {
+function addDocument(doc: vscode.TextDocument | undefined): boolean {
     if (doc && doc.languageId == 'clojure') {
         if (!documents.has(doc)) {
             const document = new MirroredDocument(doc);

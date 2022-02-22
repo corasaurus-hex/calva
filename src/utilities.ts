@@ -564,6 +564,20 @@ function distinct<T>(coll: T[]): T[] {
     return [...new Set(coll)];
 }
 
+function getActiveTextEditor(): vscode.TextEditor | undefined {
+    return vscode.window.activeTextEditor;
+}
+
+function mustGetActiveTextEditor(): vscode.TextEditor {
+    const editor = getActiveTextEditor();
+
+    if (isUndefined(editor)) {
+        throw new Error('Expected active text editor!');
+    }
+
+    return editor;
+}
+
 export {
     distinct,
     getWordAtPosition,
@@ -600,4 +614,6 @@ export {
     cljsLib,
     randomSlug,
     isWindows,
+    getActiveTextEditor,
+    mustGetActiveTextEditor,
 };

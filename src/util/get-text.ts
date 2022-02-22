@@ -36,7 +36,7 @@ export function currentFormText(
 export function currentEnclosingFormText(
     doc: vscode.TextDocument,
     pos: vscode.Position
-): SelectionAndText {
+): SelectionAndText | [undefined, string] {
     if (doc) {
         const codeSelection = select.getEnclosingFormSelection(doc, pos);
         return [codeSelection, doc.getText(codeSelection)];
@@ -44,9 +44,11 @@ export function currentEnclosingFormText(
     return [undefined, ''];
 }
 
-export function currentFunction(doc: vscode.TextDocument): SelectionAndText {
+export function currentFunction(
+    doc: vscode.TextDocument
+): SelectionAndText | [undefined, string] {
     if (doc) {
-        const tokenCursor = docMirror.getDocument(doc).getTokenCursor();
+        const tokenCursor = docMirror.mustGetDocument(doc).getTokenCursor();
         const [start, end] = tokenCursor.getFunctionSexpRange();
         if (start && end) {
             const startPos = doc.positionAt(start);
@@ -60,7 +62,9 @@ export function currentFunction(doc: vscode.TextDocument): SelectionAndText {
 
 function selectionAndText(
     doc: vscode.TextDocument,
-    textGetter: (doc: EditableDocument) => cursorTextGetter.RangeAndText
+    textGetter: (
+        doc: EditableDocument | undefined
+    ) => cursorTextGetter.RangeAndText
 ): SelectionAndText {
     if (doc) {
         const mirrorDoc = docMirror.getDocument(doc);
