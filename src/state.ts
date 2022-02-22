@@ -47,7 +47,7 @@ const PROJECT_DIR_KEY = 'connect.projectDir';
 const PROJECT_DIR_URI_KEY = 'connect.projectDirNew';
 const PROJECT_CONFIG_MAP = 'config';
 
-export function getProjectRootLocal(useCache = true): string {
+export function getProjectRootLocal(useCache = true): string | undefined {
     if (useCache) {
         return getStateValue(PROJECT_DIR_KEY);
     }
@@ -63,7 +63,7 @@ export function setProjectConfig(config) {
     return setStateValue(PROJECT_CONFIG_MAP, config);
 }
 
-export function getProjectRootUri(useCache = true): vscode.Uri {
+export function getProjectRootUri(useCache = true): vscode.Uri | undefined {
     if (useCache) {
         return getStateValue(PROJECT_DIR_URI_KEY);
     }
@@ -73,8 +73,8 @@ const NON_PROJECT_DIR_KEY = 'calva.connect.nonProjectDir';
 
 export async function getNonProjectRootDir(
     context: vscode.ExtensionContext
-): Promise<vscode.Uri> {
-    let root: vscode.Uri;
+): Promise<vscode.Uri | undefined> {
+    let root: vscode.Uri | undefined;
     if (!process.env['NEW_DRAMS']) {
         root = await context.globalState.get<Promise<vscode.Uri>>(
             NON_PROJECT_DIR_KEY
@@ -109,7 +109,7 @@ export async function getOrCreateNonProjectRoot(
     context: vscode.ExtensionContext,
     preferProjectDir = false
 ): Promise<vscode.Uri> {
-    let root: vscode.Uri;
+    let root: vscode.Uri | undefined;
     if (preferProjectDir) {
         root = getProjectRootUri();
     }
@@ -172,23 +172,19 @@ export async function initProjectDir(uri?: vscode.Uri): Promise<void> {
         ];
         const doc = util.getDocument({});
         const workspaceFolder = getProjectWsFolder();
-        await findLocalProjectRoot(projectFileNames, doc, workspaceFolder);
+        findLocalProjectRoot(projectFileNames, doc, workspaceFolder);
         await findProjectRootUri(projectFileNames, doc, workspaceFolder);
     }
 }
 
-function findLocalProjectRoot(
-    projectFileNames,
-    doc,
-    workspaceFolder
-): Promise<void> {
+function findLocalProjectRoot(projectFileNames, doc, workspaceFolder): void {
     if (workspaceFolder) {
         let rootPath: string = path.resolve(workspaceFolder.uri.fsPath);
         setStateValue(PROJECT_DIR_KEY, rootPath);
         setStateValue(PROJECT_DIR_URI_KEY, workspaceFolder.uri);
 
-        let d = null;
-        let prev = null;
+        let d: string | undefined = undefined;
+        let prev: string | undefined = undefined;
         if (doc && path.dirname(doc.uri.fsPath) !== '.') {
             d = path.dirname(doc.uri.fsPath);
         } else {
@@ -228,9 +224,9 @@ async function findProjectRootUri(
     doc,
     workspaceFolder
 ): Promise<void> {
-    let searchUri = doc?.uri || workspaceFolder?.uri;
+    let searchUri: vscode.Uri | undefined = doc?.uri || workspaceFolder?.uri;
     if (searchUri && !(searchUri.scheme === 'untitled')) {
-        let prev = null;
+        let prev: vscode.Uri | undefined = undefined;
         while (searchUri != prev) {
             try {
                 for (const projectFile in projectFileNames) {
