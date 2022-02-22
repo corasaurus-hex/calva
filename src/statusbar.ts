@@ -71,17 +71,17 @@ function update(context = state.extensionContext) {
     prettyPrintToggle.tooltip = `Turn pretty printing ${pprint ? 'off' : 'on'}`;
     prettyPrintToggle.command = 'calva.togglePrettyPrint';
 
-    typeStatus.command = null;
+    typeStatus.command = undefined;
     typeStatus.text = 'Disconnected';
     typeStatus.tooltip = 'No active REPL session';
     typeStatus.color = colorValue('disconnectedColor', currentConf);
 
-    connectionStatus.command = null;
+    connectionStatus.command = undefined;
     connectionStatus.tooltip = 'REPL connection status';
 
-    cljsBuildStatus.text = null;
+    cljsBuildStatus.text = '';
     cljsBuildStatus.command = 'calva.switchCljsBuild';
-    cljsBuildStatus.tooltip = null;
+    cljsBuildStatus.tooltip = undefined;
 
     if (getStateValue('connected')) {
         connectionStatus.text = 'REPL $(zap)';

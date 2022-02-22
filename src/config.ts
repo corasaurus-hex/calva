@@ -34,7 +34,7 @@ function _trimAliasName(name: string): string {
 async function readEdnWorkspaceConfig(uri?: vscode.Uri) {
     try {
         const data = await vscode.workspace.fs.readFile(
-            uri ?? vscode.Uri.file(state.resolvePath('.calva/config.edn'))
+            uri ?? vscode.Uri.file(state.mustResolvePath('.calva/config.edn'))
         );
         return addEdnConfig(new TextDecoder('utf-8').decode(data));
     } catch (error) {
@@ -99,16 +99,18 @@ function getConfig() {
     const configOptions = vscode.workspace.getConfiguration('calva');
     const pareditOptions = vscode.workspace.getConfiguration('calva.paredit');
 
-    const w =
-        (configOptions.inspect('customREPLCommandSnippets')
-            .workspaceValue as customREPLCommandSnippet[]) ?? [];
-    const commands = w.concat(
+    const commands = (
+        configOptions.inspect<customREPLCommandSnippet[]>(
+            'customREPLCommandSnippets'
+        )?.workspaceValue ?? []
+    ).concat(
         (state.getProjectConfig()
             ?.customREPLCommandSnippets as customREPLCommandSnippet[]) ?? []
     );
     const hoverSnippets = (
-        (configOptions.inspect('customREPLHoverSnippets')
-            .workspaceValue as customREPLCommandSnippet[]) ?? []
+        configOptions.inspect<customREPLCommandSnippet[]>(
+            'customREPLHoverSnippets'
+        )?.workspaceValue ?? []
     ).concat(
         (state.getProjectConfig()
             ?.customREPLHoverSnippets as customREPLCommandSnippet[]) ?? []
@@ -144,13 +146,13 @@ function getConfig() {
         customREPLCommandSnippets: configOptions.get<
             customREPLCommandSnippet[]
         >('customREPLCommandSnippets', []),
-        customREPLCommandSnippetsGlobal: configOptions.inspect(
-            'customREPLCommandSnippets'
-        ).globalValue as customREPLCommandSnippet[],
+        customREPLCommandSnippetsGlobal: configOptions.inspect<
+            customREPLCommandSnippet[]
+        >('customREPLCommandSnippets')?.globalValue,
         customREPLCommandSnippetsWorkspace: commands,
-        customREPLCommandSnippetsWorkspaceFolder: configOptions.inspect(
-            'customREPLCommandSnippets'
-        ).workspaceFolderValue as customREPLCommandSnippet[],
+        customREPLCommandSnippetsWorkspaceFolder: configOptions.inspect<
+            customREPLCommandSnippet[]
+        >('customREPLCommandSnippets')?.workspaceFolderValue,
         customREPLHoverSnippets: hoverSnippets,
         prettyPrintingOptions: configOptions.get<PrettyPrintingOptions>(
             'prettyPrintingOptions'

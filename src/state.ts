@@ -5,6 +5,7 @@ import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
 import { getStateValue, setStateValue } from '../out/cljs-lib/cljs-lib';
+import { isUndefined } from 'lodash';
 
 let extensionContext: vscode.ExtensionContext;
 export function setExtensionContext(context: vscode.ExtensionContext) {
@@ -130,7 +131,7 @@ export async function getOrCreateNonProjectRoot(
     return root;
 }
 
-function getProjectWsFolder(): vscode.WorkspaceFolder {
+function getProjectWsFolder(): vscode.WorkspaceFolder | undefined {
     const doc = util.getDocument({});
     if (doc) {
         const folder = vscode.workspace.getWorkspaceFolder(doc.uri);
@@ -263,10 +264,30 @@ async function findProjectRootUri(
  */
 export function resolvePath(filePath?: string) {
     const root = getProjectWsFolder();
-    if (filePath && path.isAbsolute(filePath)) {
+
+    if (!filePath) {
+        return undefined;
+    }
+
+    if (path.isAbsolute(filePath)) {
         return filePath;
     }
-    return filePath && root && path.resolve(root.uri.fsPath, filePath);
+
+    if (root) {
+        return path.resolve(root.uri.fsPath, filePath);
+    }
+
+    return undefined;
+}
+
+export function mustResolvePath(filePath?: string) {
+    const resolvedPath = resolvePath(filePath);
+
+    if (isUndefined(resolvedPath)) {
+        throw new Error('Unable to resolve path!');
+    }
+
+    return resolvedPath;
 }
 
 export { extensionContext, outputChannel, connectionLogChannel, analytics };
